@@ -1,0 +1,6 @@
+# 不要提交任何密碼或個人狀態檔
+.code-server-password
+*.info
+*.state
+*.stop
+cookies.txt
