@@ -16,7 +16,7 @@
 **第一次 (只需做一次)** — 在您的電腦開終端機 (Windows 請開 PowerShell，見 [0-2](#步驟-0-2打開您電腦的終端機))：
 
 ```bash
-ssh <帳號>@nano4.nchc.org.tw                      # 選 2FA 方式 → 輸入密碼 (見 0-3)
+ssh <帳號>@nano4.nchc.org.tw                      # 選 2FA 方式 → 國網密碼 → OTP (見 0-3)
 
 # ↓ 以下在 Nano4 上執行
 git clone https://github.com/gemini960114/nano4-code-server.git ~/nano4-code-server
@@ -83,24 +83,25 @@ The authenticity of host 'nano4.nchc.org.tw (140.110.109.166)' can't be establis
 Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 ```
 
-接著選擇 2FA 方式 (實際畫面)：
+接著依序完成三個步驟：**① 選 2FA 方式 ➔ ② 輸入國網帳號密碼 ➔ ③ 完成 2FA**。
+
+以選 `1` (Mobile APP OTP) 為例的實際畫面：
 
 ```text
 (<帳號>@nano4.nchc.org.tw) Please select the 2FA login method.
 1. Mobile APP OTP
 2. Mobile APP PUSH
 3. Email OTP
-Login method: 2
-(<帳號>@nano4.nchc.org.tw) Password:
+Login method: 1
+(<帳號>@nano4.nchc.org.tw) Password:          ← ② 輸入國網帳號密碼
+(<帳號>@nano4.nchc.org.tw) OTP:               ← ③ 輸入 6 位數動態密碼
 ```
 
-| 輸入 | 方式 | 操作 |
+| ① 輸入 | 方式 | ③ 輸入密碼之後的操作 |
 | :--- | :--- | :--- |
-| `1` | Mobile APP OTP | 打開 IDExpert App 的「OTP」，依提示輸入畫面上的 6 位數動態密碼 |
-| `2` | Mobile APP PUSH (**推薦**) | 手機 IDExpert App 會收到授權推播，點「同意」即可 |
-| `3` | Email OTP | 到註冊信箱收驗證信，依提示輸入信中的驗證碼 |
-
-並依提示輸入**國網帳號密碼**。
+| `1` | Mobile APP OTP | 出現 `OTP:` 時，輸入 IDExpert App「OTP」畫面上的 6 位數動態密碼 |
+| `2` | Mobile APP PUSH (**推薦**) | 手機 IDExpert App 會收到授權推播，點「同意」即可 (不用輸入 OTP) |
+| `3` | Email OTP | 出現 `OTP:` 時，到註冊信箱收驗證信，輸入信中的驗證碼 |
 
 > [!NOTE]
 > 輸入密碼時畫面**不會顯示任何字元** (連 `*` 都沒有)，這是正常的，打完直接按 Enter。
