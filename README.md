@@ -7,6 +7,39 @@
 | **1. localhost** | `./start.sh 1` | 您的電腦建立 SSH 通道 ➔ `http://localhost:8080/` | **目前建議使用**，所有功能 (含 ChatGPT 面板、Markdown 預覽等 webview) 正常 |
 | **2. remote** | `./start.sh 2` | 瀏覽器經 Nano4 OOD ➔ `https://nano4.nchc.org.tw/node/<主機>/<埠>/` | 不想開 SSH 通道時；待 `nano4.nchc.org.tw` 憑證更新後即可完整使用 |
 
+> **第一次使用？** 先看下方「5 分鐘上手」，遇到不懂的步驟再往下查詳細說明。
+
+---
+
+## ⚡ 5 分鐘上手
+
+**第一次 (只需做一次)** — 在您的電腦開終端機 (Windows 請開 PowerShell，見 [0-2](#步驟-0-2打開您電腦的終端機))：
+
+```bash
+ssh <帳號>@nano4.nchc.org.tw                      # 選 2FA 方式 → 輸入密碼 (見 0-3)
+
+# ↓ 以下在 Nano4 上執行
+git clone https://github.com/gemini960114/nano4-code-server.git ~/nano4-code-server
+cd ~/nano4-code-server
+./install_code_server.sh                          # 安裝 code-server (約 1 分鐘)
+./password_setup.sh 您的code-server密碼            # 設定網頁登入密碼
+```
+
+**每次使用：**
+
+```bash
+# ① Nano4 上：啟動 (已在運行會直接顯示連線方式)
+cd ~/nano4-code-server && ./start.sh 1
+
+# ② 您的電腦「另開一個」終端機：複製上一步印出的 ssh -N -L ... 指令貼上執行，視窗保持開啟
+ssh -N -L 8080:25a-lgn02:38431 <帳號>@nano4.nchc.org.tw
+
+# ③ 瀏覽器開啟 http://localhost:8080/ ，輸入 code-server 密碼
+
+# ④ 用完後 (Nano4 上)
+cd ~/nano4-code-server && ./stop.sh
+```
+
 ---
 
 ## 0. 起手式：第一次使用 (只需做一次)
@@ -15,22 +48,96 @@
 
 | 項目 | 說明 |
 | :--- | :--- |
-| Nano4 帳號 | 可 SSH 登入 `nano4.nchc.org.tw` (密碼 + OTP) |
-| 您電腦上的 `ssh` | Windows 10/11 內建 (PowerShell 直接輸入 `ssh`)；Mac / Linux 內建。模式 1 需要 |
-| 登入節點的工具 | `tmux`、`curl`、`python3` (Nano4 登入節點皆已內建) |
+| 國網帳號 | 國網中心 iService 帳號，且所屬計畫可使用 Nano4 |
+| IDExpert App | 手機安裝 **IDExpert** (App Store / Google Play) 並完成綁定，用於雙因子認證 (2FA) |
+| 您電腦上的 `ssh` | Windows 10/11、macOS、Linux 皆內建，不需另外安裝 |
+| 登入節點的工具 | `git`、`tmux`、`curl`、`python3` (Nano4 登入節點皆已內建) |
 
-### 步驟 0-2：SSH 登入 Nano4 並取得本資料夾
+### 步驟 0-2：打開您電腦的終端機
+
+| 作業系統 | 開啟方式 |
+| :--- | :--- |
+| **Windows 10/11** | 按 `Win` 鍵 ➔ 輸入 `PowerShell` ➔ 按 Enter (或按 `Win + X` ➔「終端機」) |
+| **macOS** | `Cmd + 空白鍵` ➔ 輸入 `Terminal` ➔ 按 Enter |
+| **Linux** | `Ctrl + Alt + T` |
+
+確認 `ssh` 可用 (應顯示 `OpenSSH_...` 版本字樣)：
 
 ```bash
-# 在您的電腦 (把 <帳號> 換成您的 Nano4 帳號)
-ssh <帳號>@nano4.nchc.org.tw
+ssh -V
+```
 
-# 在 Nano4 登入節點：下載本專案
+> **Windows 顯示「ssh 不是內部或外部命令」**：到「設定 ➔ 系統 ➔ 選用功能 ➔ 新增功能」安裝 **OpenSSH 用戶端**，重新開啟 PowerShell。
+
+### 步驟 0-3：SSH 登入 Nano4 (雙因子認證)
+
+```bash
+ssh <帳號>@nano4.nchc.org.tw
+```
+
+**第一次連線**會詢問是否信任主機，輸入 `yes` 後按 Enter：
+
+```text
+The authenticity of host 'nano4.nchc.org.tw (140.110.109.166)' can't be established.
+...
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+```
+
+接著選擇 2FA 方式 (實際畫面)：
+
+```text
+(<帳號>@nano4.nchc.org.tw) Please select the 2FA login method.
+1. Mobile APP OTP
+2. Mobile APP PUSH
+3. Email OTP
+Login method: 2
+(<帳號>@nano4.nchc.org.tw) Password:
+```
+
+| 輸入 | 方式 | 操作 |
+| :--- | :--- | :--- |
+| `1` | Mobile APP OTP | 打開 IDExpert App 的「OTP」，依提示輸入畫面上的 6 位數動態密碼 |
+| `2` | Mobile APP PUSH (**推薦**) | 手機 IDExpert App 會收到授權推播，點「同意」即可 |
+| `3` | Email OTP | 到註冊信箱收驗證信，依提示輸入信中的驗證碼 |
+
+並依提示輸入**國網帳號密碼**。
+
+> [!NOTE]
+> 輸入密碼時畫面**不會顯示任何字元** (連 `*` 都沒有)，這是正常的，打完直接按 Enter。
+> 收不到推播時，先手動打開 IDExpert App；仍沒有就按 `Ctrl+C` 重新連線並改選 `1`。
+
+看到類似 `[<帳號>@25a-lgn02 ~]$` 的提示字元，就代表已登入 Nano4 的**登入節點** (`25a-lgn0X`)。
+
+### 步驟 0-4：下載本專案
+
+在 Nano4 上執行：
+
+```bash
 git clone https://github.com/gemini960114/nano4-code-server.git ~/nano4-code-server
 cd ~/nano4-code-server
 ```
 
-### 步驟 0-3：安裝 code-server (免 root)
+之後要更新到最新版：`cd ~/nano4-code-server && git pull`
+
+### (選用) 設定 SSH 捷徑
+
+在**您的電腦**建立 SSH 設定檔，之後輸入 `ssh nano4` 即可，不用每次打完整位址：
+
+| 作業系統 | 設定檔位置 |
+| :--- | :--- |
+| Windows | `C:\Users\<您的電腦使用者名稱>\.ssh\config` (沒有副檔名) |
+| macOS / Linux | `~/.ssh/config` |
+
+```text
+Host nano4
+    HostName nano4.nchc.org.tw
+    User <帳號>
+    ServerAliveInterval 60
+```
+
+設定後，SSH 通道指令也可簡化為 `ssh -N -L 8080:25a-lgn02:38431 nano4`。`ServerAliveInterval` 可避免閒置太久被斷線。
+
+### 步驟 0-5：安裝 code-server (免 root)
 
 ```bash
 ./install_code_server.sh            # 安裝最新版至 ~/.local
@@ -58,9 +165,10 @@ cd ~/nano4-code-server
 ~/.local/bin/code-server --version
 ```
 
-### 步驟 0-4：設定登入密碼
+### 步驟 0-6：設定 code-server 登入密碼
 
 ```bash
+cd ~/nano4-code-server
 ./password_setup.sh 您的密碼        # 自訂密碼
 ./password_setup.sh                 # 或自動產生 14 碼隨機密碼 (會顯示在畫面上，請記下)
 
@@ -77,7 +185,7 @@ cat ~/.code-server-password         # 忘記時查看
 > [!WARNING]
 > code-server 密碼是唯一的防線，拿到密碼的人等同取得您帳號的 shell。請使用夠長的密碼，不要與 Nano4 登入密碼相同，也不要寫進 Git。
 
-### 步驟 0-5：啟動
+### 步驟 0-7：啟動
 
 完成以上步驟後，進入下一節「快速開始」。
 
@@ -127,7 +235,7 @@ tmux attach -t nano4-code-server    # 查看即時日誌 (Ctrl+B 後按 D 離開
 👉 http://localhost:8080/?folder=/home/<帳號>
 ```
 
-1. 在**您的電腦**執行輸出中的 `ssh -N -L ...`，輸入密碼與 OTP。畫面沒有任何輸出就是通道已建立，**視窗保持開啟**。
+1. 在**您的電腦另開一個終端機**，執行輸出中的 `ssh -N -L ...`，一樣會要求 2FA 與密碼 (同 [0-3](#步驟-0-3ssh-登入-nano4-雙因子認證))。完成後**畫面停住、沒有任何輸出就是通道已建立**，這個視窗保持開啟 (關掉就斷線)。
 2. 瀏覽器開啟 `http://localhost:8080/?folder=...`，輸入 code-server 密碼。
 
 說明：
@@ -225,6 +333,7 @@ $CODEX login status        # Logged in using ChatGPT
 ```text
 nano4-code-server/
 ├── README.md                    # 本說明
+├── LICENSE                      # MIT 授權
 ├── install_code_server.sh       # 免 root 安裝 / 升級 code-server 至 ~/.local
 ├── start.sh                     # 啟動: ./start.sh 1 | 2 | status
 ├── stop.sh                      # 停止服務 (含 remote 模式的 proxy)
@@ -244,7 +353,20 @@ nano4-code-server/
 
 ---
 
-## 6. 安全設計
+## 6. 使用規範 (請務必遵守)
+
+Nano4 登入節點是**所有使用者共用**的，code-server 跑在登入節點上，請遵守以下原則：
+
+* **只做輕量工作**：編輯程式、看檔案、`git`、提交 Slurm 作業、小型測試。**不要**在 code-server 的終端機跑模型訓練、大型編譯、長時間或多核心運算 (大約超過 5 分鐘、4 核心或 8 GB 記憶體)，這類工作請用 `sbatch` 送到計算節點。
+* **用完就關**：不用時請 `./stop.sh`，避免長期佔用登入節點資源。
+* **大型檔案放 `/work`**：資料集、模型權重、Python 虛擬環境請放工作區 (`/work/<帳號>`)，`$HOME` 容量與檔案數量有限。
+* **不要使用 `sudo`**：一般使用者沒有管理員權限；本專案所有步驟都不需要 root。
+* **妥善保管密碼**：不要把 `~/.code-server-password` 的內容貼到任何地方或 commit 進 Git。
+* **不要自行架設對外公開的通道** (如 Cloudflare Tunnel、ngrok) 繞過國網的登入機制；本專案的兩種模式都必須先通過國網 2FA。
+
+---
+
+## 7. 安全設計
 
 * **密碼不出現在指令參數中**：`start.sh` 讓 tmux 內的 shell 才從 `~/.code-server-password` 讀入密碼，同節點其他使用者無法用 `ps` 看到。
 * **清除 VS Code 環境變數**：從 code-server 內建終端機執行 `start.sh` 時，會繼承 `VSCODE_IPC_HOOK_CLI` 等變數，導致新的 code-server 誤判為 CLI client 而立即結束；啟動時會一併清除。
@@ -254,7 +376,7 @@ nano4-code-server/
 
 ---
 
-## 7. 常見問題
+## 8. 常見問題
 
 | 症狀 | 原因與解法 |
 | :--- | :--- |
@@ -266,5 +388,15 @@ nano4-code-server/
 | `bind: Address already in use` (本機) | 電腦上 8080 被占用，換一個埠號 |
 | 修改密碼後仍要用舊密碼 | 密碼只在啟動時讀取，請 `./stop.sh` 再 `./start.sh` |
 | 今天 SSH 落在不同登入節點，找不到服務 | 直接執行 `./start.sh status`，會顯示服務所在節點與連線方式；連線方式不變，不需重新啟動 |
+| `ssh` 顯示 `Connection timed out` | 確認網路可連外；部分機構網路會擋 22 埠，改用手機熱點測試 |
+| 登入時密碼一直錯 | 輸入時畫面不會顯示字元是正常的；確認輸入的是國網帳號密碼 (不是 code-server 密碼) |
+| SSH 通道顯示 `channel ... open failed: administratively prohibited` | 登入節點不允許該轉發，請回報國網中心，或改用模式 2 |
+| 瀏覽器開 `http://localhost:8080` 顯示無法連線 | SSH 通道視窗被關掉或已斷線，重新執行 `ssh -N -L ...` |
 | `找不到 code-server 執行檔` | 尚未安裝，執行 `./install_code_server.sh` |
 | 安裝時要求 `sudo` 密碼 | 請改用 `./install_code_server.sh` (會先建立 `~/.local/lib`、`~/.local/bin`)，不要直接執行官方指令 |
+
+---
+
+## 授權
+
+本專案以 [MIT License](LICENSE) 釋出。code-server 本身為 [coder/code-server](https://github.com/coder/code-server) (MIT)。本專案非國網中心官方專案。
